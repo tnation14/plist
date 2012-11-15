@@ -220,5 +220,5 @@ void *get(plist list, int index){
     
   int real_index = index * list->type_size;
 
-  return list->array[real_index];  
+  return (void *)list->array[real_index];  
 }
