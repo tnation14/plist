@@ -61,4 +61,10 @@ void append(plist list, void *value);
 //
 //             returns: the new plist
 void expand_capacity(plist list);
+
+void set(plist list, int index, void *value);
+
+void insert_list(plist list, int index, void *value);
+
+void *get(plist list, int index);
 #endif

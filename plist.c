@@ -80,19 +80,10 @@ struct python_list *init_list(int type_size) {
     exit(1);
   }
 
-  plist->capacity = START_SIZE;
+  plist->capacity = START_SIZE/type_size;
   plist->size = 0;
   plist->type_size = type_size;
   
-  /*
-  printf("sizeof(plist): %lu\n",sizeof(plist));
-  printf("sizeof(plist->array): %lu\n",sizeof(plist->array));
-  printf("plist->capacity: %d\n",plist->capacity);
-  printf("plist->size: %d\n",plist->size);
-  printf("plist->type_size: %d\n",plist->type_size);
-  */
-
-  PRINT1("inside intit_list size %d\n", type_size);
   return plist;
 }
 /*********************************************************/
@@ -140,7 +131,6 @@ void append(plist list, void *value) {
   list->size++;
   // Check if an additional call will exceed capacity
   if (list->type_size * list->size+1 >= list->capacity) {
-    printf("expand capacity");
     expand_capacity(list);
   }
 }
@@ -152,8 +142,83 @@ void append(plist list, void *value) {
 //
 //             returns: the new plist
 void expand_capacity(plist list) {
-  if (!(list->array = realloc(list->array,list->capacity+START_SIZE))){
+
+  if (!(list->array = realloc(list->array,2*START_SIZE))){
     printf("realloc failed");
     exit(1);
   }
+  
+}
+
+/* Insert_list places an element in list[index], shifting
+   all other list elements one place to the right.
+   
+   list: The list being modified.
+   index: the index at which to insert the value.
+   value: value being added to the list. */
+void insert_list(plist list, int index, void *value){
+	if(!(0<=index || index<list->size)){
+	  printf("Index %d out of range.\n",index);
+	  exit(1);
+	}
+	int i;
+	// Moves every element one list (NOT ARRAY) bucket
+	// to the right. 
+	for(i=list->size-1;i>=index;i--){
+	  // Expand capacity if we're at the end of the list's
+	  // Underlying array.
+	  if (list->type_size * list->size+1 >= list->capacity) {
+        expand_capacity(list);
+  	  }	  
+  	  set(list,i+1,get(list,i));
+    }
+    // Put the new value into a memory bucket, increase size.
+    set(list,index,value);
+    list->size++;
+}
+/* Insert_list writes an element into list[index].
+   
+   list: The list being modified.
+   index: the index at which to write the value.
+   value: value being added to the list. */
+   
+void set(plist list, int index, void *value){
+  if(!(0<=index || index<list->size)){
+	  printf("Index %d out of range.\n",index);
+	  exit(1);
+	}
+    /*Finds the actual array index. The array in the plist
+    struct has 20n buckets, and every (type_size)
+    buckets holds one actual list element. Therefore,
+    the index of the element we want is the index passed
+    to us*type_size. */
+    
+  int shift = index * list->type_size;
+  
+  //Overwrites (type_size) bytes of memory in order to store
+  //value.
+  memcpy(list->array+shift, &value, list->type_size); 
+  
+}
+
+/* Get returns the index at list[index].
+   list: list being modified.
+   index: value to return. */
+
+void *get(plist list, int index){
+  if(!(0<=index || index<list->size)){
+	  printf("Index %d out of range.\n",index);
+	  exit(1);
+	}
+	
+  /*Finds the actual array index. The array in the plist
+    struct has 20n buckets, and every (type_size)
+    buckets holds one actual list element. Therefore,
+    the index of the element we want is the index passed
+    to us*type_size. */
+    
+    
+  int real_index = index * list->type_size;
+
+  return list->array[real_index];  
 }
