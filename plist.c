@@ -1,6 +1,5 @@
 //
-// TODO: add a top-level comment here
-// all functions should be well commented!
+// Taylor Nation and Zachary Lockett-Streiff
 //
 #include <assert.h>
 #include <string.h>
@@ -73,7 +72,7 @@ struct python_list *init_list(int type_size) {
     exit(1);
   }
 
-  plist->array = malloc(type_size*START_SIZE);
+  plist->array = malloc(START_SIZE);
   // for some reason, sizeof(plist->array) won't evaluate to 20 (8). Why?
   if (plist->array == NULL) {
     printf("malloc failed");
@@ -130,7 +129,7 @@ void append(plist list, void *value) {
   memcpy(list->array+shift, &value, list->type_size); //test w/ w/o the &
   list->size++;
   // Check if an additional call will exceed capacity
-  if (list->type_size * list->size+1 >= list->capacity) {
+  if (list->size+1 >= list->capacity) {
     expand_capacity(list);
   }
 }
@@ -143,9 +142,13 @@ void append(plist list, void *value) {
 //             returns: the new plist
 void expand_capacity(plist list) {
 
-  if (!(list->array = realloc(list->array,2*START_SIZE))){
+  if (!(list->array = realloc(list->array,
+          (list->capacity*list->type_size)+START_SIZE))){
     printf("realloc failed");
     exit(1);
+  }else{
+   list->capacity = ((list->capacity*list->type_size) + START_SIZE)/list->type_size;
+
   }
   
 }
@@ -160,21 +163,26 @@ void insert_list(plist list, int index, void *value){
 	if(!(0<=index || index<list->size)){
 	  printf("Index %d out of range.\n",index);
 	  exit(1);
-	}
-	int i;
+        }
+        if (list->size+1 >= list->capacity) {
+            expand_capacity(list);
+  	}
+
+        int i; 
 	// Moves every element one list (NOT ARRAY) bucket
 	// to the right. 
 	for(i=list->size-1;i>=index;i--){
 	  // Expand capacity if we're at the end of the list's
 	  // Underlying array.
-	  if (list->type_size * list->size+1 >= list->capacity) {
-        expand_capacity(list);
+	  if (list->size+1 >= list->capacity) {
+            expand_capacity(list);
   	  }	  
   	  set(list,i+1,get(list,i));
+          
     }
     // Put the new value into a memory bucket, increase size.
-    set(list,index,value);
-    list->size++;
+    set(list,index,(void *)value);
+    list->size +=1;
 }
 /* Insert_list writes an element into list[index].
    
